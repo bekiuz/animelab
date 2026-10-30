@@ -67,6 +67,24 @@ export const AnimatedArtistCanvas: React.FC<AnimatedArtistCanvasProps> = ({
     onStrokeChange?.(activeStroke);
   }, [currentStrokeIndex]);
 
+  // When a stroke finishes, continue to the next one automatically.
+  // Pausing in the middle never advances the lesson.
+  useEffect(() => {
+    if (
+      isPlaying ||
+      pointIndex < activeStroke.points.length ||
+      currentStrokeIndex >= ANIMATED_DEMO_STROKES.length - 1
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCurrentStrokeIndex(currentStrokeIndex + 1);
+    }, 420);
+
+    return () => window.clearTimeout(timer);
+  }, [isPlaying, pointIndex, activeStroke, currentStrokeIndex, setCurrentStrokeIndex]);
+
   // Render the paper and strokes continuously. Progress is kept in a ref,
   // so React does not restart the animation loop after every point.
   useEffect(() => {
