@@ -1,0 +1,161 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Registered platform user profile and preferences",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["student", "mentor", "admin"] },
+        "bio": { "type": "string", "maxLength": 500 },
+        "level": { "type": "number" },
+        "xp": { "type": "number" },
+        "badges": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["email", "displayName", "role"]
+    },
+    "Course": {
+      "title": "Anime Course",
+      "description": "Educational course for anime drawing",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "category": { "type": "string", "maxLength": 80 },
+        "difficulty": { "type": "string", "enum": ["Boshlang'ich", "O'rta", "Yuqori"] },
+        "instructor": { "type": "string", "maxLength": 100 },
+        "thumbnail": { "type": "string", "maxLength": 500 },
+        "duration": { "type": "string", "maxLength": 50 },
+        "lessonsCount": { "type": "number" },
+        "rating": { "type": "number" },
+        "enrolledCount": { "type": "number" },
+        "isPublished": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "category", "difficulty", "instructor"]
+    },
+    "Lesson": {
+      "title": "Course Lesson",
+      "description": "Individual tutorial lesson inside a course",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 150 },
+        "duration": { "type": "string", "maxLength": 50 },
+        "videoUrl": { "type": "string", "maxLength": 500 },
+        "content": { "type": "string", "maxLength": 5000 },
+        "order": { "type": "number" },
+        "isFree": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["courseId", "title", "order"]
+    },
+    "UserProgress": {
+      "title": "Course Progress",
+      "description": "Student course completion state",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "completedLessonIds": { "type": "array" },
+        "progressPercent": { "type": "number" },
+        "lastAccessedAt": { "type": "string" }
+      },
+      "required": ["userId", "courseId"]
+    },
+    "Artwork": {
+      "title": "Gallery Artwork",
+      "description": "User uploaded anime drawing",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "imageUrl": { "type": "string", "maxLength": 100000 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "authorAvatar": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 80 },
+        "likesCount": { "type": "number" },
+        "likes": { "type": "array" },
+        "viewsCount": { "type": "number" },
+        "isFeatured": { "type": "boolean" },
+        "competitionId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "imageUrl", "authorId", "authorName"]
+    },
+    "Competition": {
+      "title": "Anime Competition",
+      "description": "Art contest for platform students",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "theme": { "type": "string", "maxLength": 200 },
+        "prize": { "type": "string", "maxLength": 200 },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "rules": { "type": "array" },
+        "coverImage": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["active", "upcoming", "completed"] },
+        "entriesCount": { "type": "number" },
+        "winnerArtworkId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "theme", "prize", "endDate", "status"]
+    },
+    "MentorshipRequest": {
+      "title": "Mentorship Critique",
+      "description": "Artwork feedback request for mentors",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 100 },
+        "userAvatar": { "type": "string", "maxLength": 500 },
+        "artworkUrl": { "type": "string", "maxLength": 100000 },
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "reviewed"] },
+        "feedback": { "type": "string", "maxLength": 3000 },
+        "mentorName": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "artworkUrl", "title", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Catalog of drawing courses"
+    },
+    "/courses/{courseId}/lessons/{lessonId}": {
+      "schema": { "$ref": "#/entities/Lesson" },
+      "description": "Lessons belonging to a course"
+    },
+    "/userProgress/{progressId}": {
+      "schema": { "$ref": "#/entities/UserProgress" },
+      "description": "Progress records per user and course"
+    },
+    "/artworks/{artworkId}": {
+      "schema": { "$ref": "#/entities/Artwork" },
+      "description": "Community anime artwork gallery"
+    },
+    "/competitions/{competitionId}": {
+      "schema": { "$ref": "#/entities/Competition" },
+      "description": "Drawing competitions"
+    },
+    "/mentorshipRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/MentorshipRequest" },
+      "description": "Mentor review and feedback submissions"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #0c081e;
+    color: #f1f5f9;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Custom Anime Aesthetics & Glassmorphism */
+.glass-panel {
+  background: rgba(22, 16, 48, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(30, 22, 65, 0.85);
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.25);
+  transform: translateY(-2px);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+}
+
+.neon-border {
+  border-color: rgba(192, 132, 252, 0.5);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090615;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a1b54;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed;
+}
+
+/* Drawing Canvas Grid Pattern */
+.drawing-grid {
+  background-size: 20px 20px;
+  background-image: 
+    linear-gradient(to right, rgba(168, 85, 247, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
+}

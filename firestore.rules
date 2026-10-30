@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'bekiuz282@gmail.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    function isMentorOrAdmin() {
+      return isSignedIn() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'mentor'
+      );
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Courses Collection & Lessons
+    match /courses/{courseId} {
+      allow read: if true;
+      allow create, update, delete: if isMentorOrAdmin();
+
+      match /lessons/{lessonId} {
+        allow read: if true;
+        allow create, update, delete: if isMentorOrAdmin();
+      }
+    }
+
+    // User Progress
+    match /userProgress/{progressId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Artworks Gallery
+    match /artworks/{artworkId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.authorId == request.auth.uid || 
+        isAdmin() ||
+        // Allow users to like or increment views
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likesCount', 'viewsCount'])
+      );
+      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // Competitions
+    match /competitions/{competitionId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Mentorship Requests
+    match /mentorshipRequests/{requestId} {
+      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isMentorOrAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isMentorOrAdmin());
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+  }
+}
