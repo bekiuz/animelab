@@ -1,5 +1,5 @@
 {
-  "name": "animelab",
+  "name": "react-example",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,10 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
-    "android:add": "cap add android",
-    "android:sync": "cap sync android",
-    "android:open": "cap open android"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -24,9 +21,7 @@
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^8.3.0",
-    "@capacitor/core": "^8.5.3",
-    "@capacitor/android": "^8.5.3"
+    "vite": "^8.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
@@ -37,7 +32,6 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21",
-    "@capacitor/cli": "^8.5.3"
+    "@types/express": "^4.17.21"
   }
 }
