@@ -214,11 +214,11 @@ export const AnimatedArtistCanvas: React.FC<AnimatedArtistCanvasProps> = ({
             <button
               key={value}
               onClick={() => setSpeed(value)}
-              className={\`rounded px-2 py-1 text-[10px] font-bold ${
+              className={`rounded px-2 py-1 text-[10px] font-bold ${
                 speed === value
                   ? 'bg-purple-600 text-white'
                   : 'text-slate-400 hover:text-white'
-              }\`}
+              }`}
             >
               {value}x
             </button>
@@ -261,8 +261,8 @@ export const AnimatedArtistCanvas: React.FC<AnimatedArtistCanvasProps> = ({
           <div
             className="pointer-events-none absolute z-20 flex items-center gap-1"
             style={{
-              left: \`calc(8px + ${(cursorPos.x / CANVAS_WIDTH) * 100}% - 10px)\`,
-              top: \`calc(8px + ${(cursorPos.y / CANVAS_HEIGHT) * 100}% - 12px)\`,
+              left: `calc(8px + ${(cursorPos.x / CANVAS_WIDTH) * 100}% - 10px)`,
+              top: `calc(8px + ${(cursorPos.y / CANVAS_HEIGHT) * 100}% - 12px)`,
               transform: 'translate(-50%, -50%)',
             }}
           >
