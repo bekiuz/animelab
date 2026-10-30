@@ -1,6 +1,4 @@
-import type { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
+const config = {
   appId: 'uz.bekiuz.animelab',
   appName: 'AnimeLab',
   webDir: 'dist',
