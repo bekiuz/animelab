@@ -14,248 +14,94 @@ export interface AnimeVectorStroke {
   points: StrokePoint[];
 }
 
-// Generate points for a circle
-function generateCirclePoints(cx: number, cy: number, r: number, numPoints = 40): StrokePoint[] {
-  const pts: StrokePoint[] = [];
-  for (let i = 0; i <= numPoints; i++) {
-    const angle = (i / numPoints) * Math.PI * 2;
-    pts.push({
-      x: Math.round(cx + r * Math.cos(angle)),
-      y: Math.round(cy + r * Math.sin(angle)),
-    });
-  }
-  return pts;
+function line(x1: number, y1: number, x2: number, y2: number, count = 18): StrokePoint[] {
+  return Array.from({ length: count + 1 }, (_, i) => {
+    const t = i / count;
+    return { x: Math.round(x1 + (x2 - x1) * t), y: Math.round(y1 + (y2 - y1) * t) };
+  });
 }
 
-// Generate points along a line
-function generateLinePoints(x1: number, y1: number, x2: number, y2: number, numPoints = 20): StrokePoint[] {
-  const pts: StrokePoint[] = [];
-  for (let i = 0; i <= numPoints; i++) {
-    const t = i / numPoints;
-    pts.push({
-      x: Math.round(x1 + t * (x2 - x1)),
-      y: Math.round(y1 + t * (y2 - y1)),
-    });
-  }
-  return pts;
-}
-
-// Generate points along a quadratic bezier curve
-function generateBezierPoints(
-  x1: number, y1: number,
-  cx: number, cy: number,
-  x2: number, y2: number,
-  numPoints = 25
-): StrokePoint[] {
-  const pts: StrokePoint[] = [];
-  for (let i = 0; i <= numPoints; i++) {
-    const t = i / numPoints;
+function curve(x1: number, y1: number, cx: number, cy: number, x2: number, y2: number, count = 28): StrokePoint[] {
+  return Array.from({ length: count + 1 }, (_, i) => {
+    const t = i / count;
     const inv = 1 - t;
-    const x = inv * inv * x1 + 2 * inv * t * cx + t * t * x2;
-    const y = inv * inv * y1 + 2 * inv * t * cy + t * t * y2;
-    pts.push({ x: Math.round(x), y: Math.round(y) });
-  }
-  return pts;
+    return {
+      x: Math.round(inv * inv * x1 + 2 * inv * t * cx + t * t * x2),
+      y: Math.round(inv * inv * y1 + 2 * inv * t * cy + t * t * y2),
+    };
+  });
 }
 
-export const ANIMATED_DEMO_STROKES: AnimeVectorStroke[] = [
-  // 1. Head Circle
-  {
-    id: 1,
-    stepNumber: 1,
-    title: "1. Bosh Doirasi",
-    instructionUz: "1. Endi boshning asosiy doira shaklini chizing.",
-    tool: "pencil",
-    color: "#06b6d4",
-    lineWidth: 3,
-    points: generateCirclePoints(400, 230, 110, 45),
-  },
+function ellipse(cx: number, cy: number, rx: number, ry: number, count = 48): StrokePoint[] {
+  return Array.from({ length: count + 1 }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2;
+    return { x: Math.round(cx + rx * Math.cos(angle)), y: Math.round(cy + ry * Math.sin(angle)) };
+  });
+}
 
-  // 2. Vertical Axis Line
-  {
-    id: 2,
-    stepNumber: 2,
-    title: "2. Markaziy Liniya",
-    instructionUz: "2. Endi yuzning simmetriya yo'nalish chizig'ini chizing.",
-    tool: "pencil",
-    color: "#06b6d4",
-    lineWidth: 2,
-    points: generateLinePoints(400, 90, 400, 450, 25),
-  },
+const strokes: AnimeVectorStroke[] = [];
+function add(title: string, instructionUz: string, points: StrokePoint[], color = '#64748b', lineWidth = 2.5, tool: 'pencil' | 'brush' = 'pencil') {
+  const id = strokes.length + 1;
+  strokes.push({ id, stepNumber: id, title, instructionUz, points, color, lineWidth, tool });
+}
 
-  // 3. Eye Axis Line
-  {
-    id: 3,
-    stepNumber: 3,
-    title: "3. Ko'zlar O'qi",
-    instructionUz: "3. Endi ko'zlar balandligini belgilovchi gorizontal chiziqni o'tkazing.",
-    tool: "pencil",
-    color: "#06b6d4",
-    lineWidth: 2,
-    points: generateLinePoints(270, 250, 530, 250, 25),
-  },
+// Konstruksiya: rassom avval bosh va yuz proporsiyalarini belgilaydi.
+add('Boshning asosiy shakli', 'Yengil qalam bilan bosh uchun katta oval chizing. Hozircha chiziqlarni qattiq bosmang.', ellipse(400, 238, 112, 137, 64), '#38bdf8', 2);
+add('Yuzning markaziy o‘qi', 'Oval markazidan iyakkacha yengil vertikal yo‘nalish chizig‘ini tushiring.', curve(400, 95, 405, 245, 400, 405, 32), '#38bdf8', 2);
+add('Ko‘zlar yo‘nalishi', 'Yuzning o‘rtasidan ko‘zlar joylashadigan gorizontal chiziq torting.', line(286, 246, 514, 246, 28), '#38bdf8', 2);
+add('Jag‘ning chap tomoni', 'Ovalning chap chetidan boshlang va chiziqni iyak tomon yumshoq egib olib boring.', curve(291, 220, 294, 345, 400, 402, 34), '#a78bfa', 3);
+add('Jag‘ning o‘ng tomoni', 'Ikkinchi tomonni chizing va ikki chiziqni iyakda birlashtiring.', curve(509, 220, 506, 345, 400, 402, 34), '#a78bfa', 3);
+add('Chap quloq', 'Yuzning chap chetiga quloq shaklini chizing. U ko‘z va burun oralig‘iga yaqin joylashadi.', curve(294, 250, 264, 242, 274, 302, 24), '#a78bfa', 2.5);
+add('O‘ng quloq', 'Ikkinchi quloqni yuzning o‘ng tomoniga, birinchisiga mos balandlikda chizing.', curve(506, 250, 536, 242, 526, 302, 24), '#a78bfa', 2.5);
 
-  // 4. Left Jawline
-  {
-    id: 4,
-    stepNumber: 4,
-    title: "4. Chap Jag'",
-    instructionUz: "4. Endi chap jag' va iyak yo'nalishini shakllantiring.",
-    tool: "pencil",
-    color: "#a855f7",
-    lineWidth: 3,
-    points: generateBezierPoints(290, 250, 320, 370, 400, 410, 30),
-  },
+// Ko‘zlar: avval qovoqlar, keyin iris va qorachiqlar.
+add('Chap ko‘zning yuqori qovog‘i', 'Chap ko‘z uchun yuqoriga ko‘tarilgan yoy chizing. Anime ko‘zining ifodasi shu chiziqdan boshlanadi.', curve(310, 258, 345, 224, 384, 258, 30), '#312e81', 4, 'brush');
+add('Chap ko‘zning pastki qovog‘i', 'Yuqori yoyning ikki uchini pastdan yumshoq egri chiziq bilan ulang.', curve(310, 258, 347, 292, 384, 258, 30), '#312e81', 2.5);
+add('O‘ng ko‘zning yuqori qovog‘i', 'Endi o‘ng ko‘zning yuqori yoyini chizing. Ikki ko‘z bir xil balandlikda bo‘lsin.', curve(416, 258, 455, 224, 490, 258, 30), '#312e81', 4, 'brush');
+add('O‘ng ko‘zning pastki qovog‘i', 'O‘ng ko‘zning pastki qismini yumshoq egri chiziq bilan yoping.', curve(416, 258, 453, 292, 490, 258, 30), '#312e81', 2.5);
+add('Chap ko‘z qorachig‘i', 'Chap ko‘z ichiga vertikal oval iris chizing. Yuqori qismi kiprik ostida qolishi mumkin.', ellipse(350, 260, 17, 22, 32), '#a855f7', 3, 'brush');
+add('O‘ng ko‘z qorachig‘i', 'Ikkinchi ko‘z ichiga ham mos oval chizing.', ellipse(450, 260, 17, 22, 32), '#a855f7', 3, 'brush');
+add('Chap ko‘z markazi', 'Iris ichiga kichikroq qoramtir oval chizing.', ellipse(350, 263, 8, 13, 24), '#1e1b4b', 3, 'brush');
+add('O‘ng ko‘z markazi', 'Ikkinchi ko‘z qorachig‘ini ham to‘ldiring.', ellipse(450, 263, 8, 13, 24), '#1e1b4b', 3, 'brush');
 
-  // 5. Right Jawline
-  {
-    id: 5,
-    stepNumber: 5,
-    title: "5. O'ng Jag'",
-    instructionUz: "5. Endi o'ng jag' va iyak uchini birlashtiring.",
-    tool: "pencil",
-    color: "#a855f7",
-    lineWidth: 3,
-    points: generateBezierPoints(510, 250, 480, 370, 400, 410, 30),
-  },
+// Yuz ifodasi: qoshlar, burun, og‘iz va quloq detallari.
+add('Chap qosh', 'Chap ko‘z ustida yengil egilgan qosh chizing. Qosh ko‘zga juda yaqin bo‘lmasin.', curve(314, 218, 346, 202, 382, 218, 24), '#312e81', 3, 'brush');
+add('O‘ng qosh', 'Ikkinchi qoshni birinchisiga mos balandlikda chizing.', curve(418, 218, 454, 202, 486, 218, 24), '#312e81', 3, 'brush');
+add('Burun', 'Yuz markazida qisqa, nozik burun chizig‘ini chizing.', curve(400, 285, 394, 300, 400, 307, 12), '#64748b', 2);
+add('Og‘izning yuqori chizig‘i', 'Burun ostidan tabassumning yuqori egri chizig‘ini chizing.', curve(373, 337, 400, 347, 427, 337, 20), '#be185d', 2.5, 'brush');
+add('Og‘izning pastki chizig‘i', 'Tabassumning pastki qismini kichik egri chiziq bilan tugating.', curve(378, 340, 400, 358, 422, 340, 20), '#be185d', 2, 'brush');
+add('Chap quloq ichki chizig‘i', 'Quloq ichiga bitta mayin egri chiziq qo‘shing.', curve(282, 270, 293, 278, 286, 294, 14), '#a78bfa', 2);
+add('O‘ng quloq ichki chizig‘i', 'Ikkinchi quloq ichiga ham shu kabi mayin chiziq qo‘shing.', curve(518, 270, 507, 278, 514, 294, 14), '#a78bfa', 2);
 
-  // 6. Left Eye Upper Lash
-  {
-    id: 6,
-    stepNumber: 6,
-    title: "6. Chap Kiprik Yoyi",
-    instructionUz: "6. Endi birinchi (chap) ko'zning qalin yuqori kiprik yoyini chizing.",
-    tool: "brush",
-    color: "#1e1b4b",
-    lineWidth: 5,
-    points: generateBezierPoints(320, 245, 345, 230, 375, 245, 25),
-  },
+// Soch: avval katta tashqi shakl, keyin peshana tutamlari va yon sochlar.
+add('Sochning chap yuqori konturi', 'Peshana ustidan sochning katta hajmini chap tomondan bosh tepasiga qarab chizing.', curve(300, 194, 270, 78, 400, 74, 38), '#4c1d95', 5, 'brush');
+add('Sochning o‘ng yuqori konturi', 'Bosh tepasidagi soch konturini o‘ng tomonga davom ettiring.', curve(400, 74, 532, 78, 500, 194, 38), '#4c1d95', 5, 'brush');
+add('Chap peshana sochi', 'Birinchi soch tutamini chapdan peshanaga qarab tushiring. Uchiga kelganda chiziqni egib boring.', curve(326, 118, 316, 178, 365, 222, 30), '#6d28d9', 4, 'brush');
+add('Markaziy peshana sochi', 'O‘rtadan tushadigan soch tutamini chizing. U yuzning yuqori qismiga yengil tushsin.', curve(386, 88, 390, 158, 400, 219, 30), '#6d28d9', 4, 'brush');
+add('O‘ng peshana sochi', 'O‘ng tomondagi tutamni markazga qarab egib chizing.', curve(466, 118, 484, 178, 437, 222, 30), '#6d28d9', 4, 'brush');
+add('Chap yon soch tashqi konturi', 'Chap tomonda sochni quloq yonidan pastga, yelka tomonga tushiring.', curve(302, 160, 245, 224, 267, 365, 36), '#4c1d95', 5, 'brush');
+add('Chap yon soch ichki tutami', 'Chap soch ichiga ikkinchi tutam chizing. U yuz konturini biroz qoplab turishi mumkin.', curve(316, 190, 282, 282, 308, 394, 32), '#7c3aed', 3.5, 'brush');
+add('O‘ng yon soch tashqi konturi', 'O‘ng tomonda uzun soch konturini yelka tomon tushiring.', curve(498, 160, 555, 224, 533, 365, 36), '#4c1d95', 5, 'brush');
+add('O‘ng yon soch ichki tutami', 'O‘ng soch ichiga yana bir mayin tutam chizing.', curve(484, 190, 518, 282, 492, 394, 32), '#7c3aed', 3.5, 'brush');
+add('Sochning chap uchi', 'Chap tomondagi soch uchini yumshoq egri chiziq bilan yakunlang.', curve(268, 365, 276, 410, 310, 424, 22), '#4c1d95', 3, 'brush');
+add('Sochning o‘ng uchi', 'Ikkinchi tomondagi soch uchini ham chizing.', curve(532, 365, 524, 410, 490, 424, 22), '#4c1d95', 3, 'brush');
 
-  // 7. Left Iris & Pupil
-  {
-    id: 7,
-    stepNumber: 7,
-    title: "7. Chap Qorachiq",
-    instructionUz: "7. Endi chap ko'z qorachig'i uchun oval shaklni joylashtiring.",
-    tool: "brush",
-    color: "#ec4899",
-    lineWidth: 4,
-    points: generateCirclePoints(348, 260, 18, 30),
-  },
+// Bo‘yin, yelka va kiyim.
+add('Bo‘yinning chap konturi', 'Iyak ostidan pastga bo‘yinning chap konturini chizing.', line(365, 385, 357, 458, 18), '#312e81', 3);
+add('Bo‘yinning o‘ng konturi', 'Bo‘yinning ikkinchi konturini chizing.', line(435, 385, 443, 458, 18), '#312e81', 3);
+add('Chap yelka', 'Bo‘yin tagidan chap yelka tomonga egri chiziq torting.', curve(357, 446, 305, 450, 258, 518, 28), '#312e81', 4, 'brush');
+add('O‘ng yelka', 'Ikkinchi yelkani shu shaklga mos ravishda chizing.', curve(443, 446, 495, 450, 542, 518, 28), '#312e81', 4, 'brush');
+add('Ko‘ylak yoqasining chap tomoni', 'Bo‘yin tagidan ko‘ylak yoqasining chap uchini chizing.', curve(358, 444, 365, 474, 390, 493, 22), '#64748b', 3);
+add('Ko‘ylak yoqasining o‘ng tomoni', 'Yoqaning ikkinchi tomonini markazda birlashtiring.', curve(442, 444, 435, 474, 410, 493, 22), '#64748b', 3);
+add('Ko‘ylak markaziy chizig‘i', 'Kiyimning old qismida pastga tushuvchi markaziy chiziq qo‘shing.', line(400, 493, 400, 548, 16), '#64748b', 2.5);
+add('Yoqa bezagi', 'Yoqaning markaziga kichik bezak yoki galstuk shaklini chizing.', curve(385, 493, 400, 518, 415, 493, 18), '#a855f7', 3, 'brush');
 
-  // 8. Right Eye Upper Lash
-  {
-    id: 8,
-    stepNumber: 8,
-    title: "8. O'ng Kiprik Yoyi",
-    instructionUz: "8. Endi ikkinchi (o'ng) ko'zning qalin yuqori kiprik yoyini chizing.",
-    tool: "brush",
-    color: "#1e1b4b",
-    lineWidth: 5,
-    points: generateBezierPoints(425, 245, 455, 230, 480, 245, 25),
-  },
+// Yakuniy detallar: soch tolalari, ko‘z yaltirashi va yumshoq soya.
+add('Chap soch yaltirashi', 'Soch ustiga yorug‘lik tushgan joyni ko‘rsatish uchun nozik och rangli chiziq torting.', curve(326, 106, 348, 84, 375, 92, 22), '#c4b5fd', 3, 'brush');
+add('O‘ng soch yaltirashi', 'Ikkinchi tomonga ham qisqa yorug‘lik chizig‘ini qo‘shing.', curve(425, 91, 455, 82, 475, 108, 22), '#c4b5fd', 3, 'brush');
+add('Chap ko‘zdagi nur', 'Chap ko‘z ichiga kichik oq yaltirash nuqtasini chizing.', ellipse(343, 253, 4, 6, 16), '#ffffff', 3, 'brush');
+add('O‘ng ko‘zdagi nur', 'Ikkinchi ko‘zga ham nur nuqtasini qo‘shing.', ellipse(443, 253, 4, 6, 16), '#ffffff', 3, 'brush');
+add('Iyak ostidagi soya', 'Iyak ostiga juda yengil egri soya chizing. Bu yuzga hajm beradi.', curve(358, 388, 400, 410, 442, 388, 22), '#a78bfa', 2, 'brush');
+add('Yakuniy soch tolasi', 'Soch ichiga oxirgi mayin chiziqni qo‘shing. Namoyish tugagach, rasmni o‘zingiz ham takrorlab chizing.', curve(290, 223, 276, 280, 292, 337, 26), '#c4b5fd', 2, 'brush');
 
-  // 9. Right Iris & Pupil
-  {
-    id: 9,
-    stepNumber: 9,
-    title: "9. O'ng Qorachiq",
-    instructionUz: "9. Endi o'ng ko'z qorachig'i ovalini va o'rtadagi nuqtani chizing.",
-    tool: "brush",
-    color: "#ec4899",
-    lineWidth: 4,
-    points: generateCirclePoints(452, 260, 18, 30),
-  },
-
-  // 10. Eyebrows
-  {
-    id: 10,
-    stepNumber: 10,
-    title: "10. Nozik Qoshlar",
-    instructionUz: "10. Endi ko'zlar ustidagi elastik nozik qoshlarni chizing.",
-    tool: "brush",
-    color: "#1e1b4b",
-    lineWidth: 3,
-    points: [
-      ...generateBezierPoints(315, 220, 345, 210, 375, 225, 15),
-      ...generateBezierPoints(425, 225, 455, 210, 485, 220, 15),
-    ],
-  },
-
-  // 11. Nose & Smile
-  {
-    id: 11,
-    stepNumber: 11,
-    title: "11. Burun va Tabassum",
-    instructionUz: "11. Endi burun nuqtasini hamda shaddod tabassum yoyini joylashtiring.",
-    tool: "brush",
-    color: "#1e1b4b",
-    lineWidth: 3,
-    points: [
-      ...generateLinePoints(400, 320, 396, 328, 10),
-      ...generateBezierPoints(370, 355, 400, 370, 430, 355, 20),
-    ],
-  },
-
-  // 12. Hair Bangs (Peshana Sochi)
-  {
-    id: 12,
-    stepNumber: 12,
-    title: "12. Peshana Sochi (Bangs)",
-    instructionUz: "12. Endi peshanaga tushuvchi soch to'plamlarini (Pochka) chizing.",
-    tool: "brush",
-    color: "#7c3aed",
-    lineWidth: 4,
-    points: [
-      ...generateBezierPoints(400, 110, 370, 180, 330, 210, 20),
-      ...generateBezierPoints(400, 110, 410, 190, 400, 220, 20),
-      ...generateBezierPoints(400, 110, 440, 180, 470, 210, 20),
-    ],
-  },
-
-  // 13. Side & Back Hair Volume
-  {
-    id: 13,
-    stepNumber: 13,
-    title: "13. Yon va Atrof Sochi",
-    instructionUz: "13. Endi bosh atrofidagi havodor va yirik soch hajmini chizing.",
-    tool: "brush",
-    color: "#7c3aed",
-    lineWidth: 5,
-    points: [
-      ...generateBezierPoints(330, 130, 250, 220, 270, 420, 30),
-      ...generateBezierPoints(470, 130, 550, 220, 530, 420, 30),
-    ],
-  },
-
-  // 14. Neck & Collar
-  {
-    id: 14,
-    stepNumber: 14,
-    title: "14. Bo'yin va Yoqa",
-    instructionUz: "14. Endi bo'yin chiziqlari hamda maktab formasi yoqasini chizing.",
-    tool: "brush",
-    color: "#1e1b4b",
-    lineWidth: 4,
-    points: [
-      ...generateLinePoints(360, 390, 350, 470, 15),
-      ...generateLinePoints(440, 390, 450, 470, 15),
-      ...generateBezierPoints(320, 480, 400, 530, 480, 480, 25),
-    ],
-  },
-
-  // 15. Eye Highlights & Glow
-  {
-    id: 15,
-    stepNumber: 15,
-    title: "15. Ko'z Nuri va Porlash",
-    instructionUz: "15. Endi ko'zlarga oq nur nuqtalarini (Highlights) qo'shib, artni yakunlang!",
-    tool: "brush",
-    color: "#ffffff",
-    lineWidth: 4,
-    points: [
-      ...generateCirclePoints(342, 252, 4, 10),
-      ...generateCirclePoints(446, 252, 4, 10),
-    ],
-  },
-];
+export const ANIMATED_DEMO_STROKES: AnimeVectorStroke[] = strokes;

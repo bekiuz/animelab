@@ -44,6 +44,7 @@ export const StudioPage: React.FC = () => {
 
   // Student Canvas Studio State
   const studentCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const guideCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [activeTool, setActiveTool] = useState<'pencil' | 'brush' | 'eraser' | 'pan'>('pencil');
   const [color, setColor] = useState('#06b6d4');
@@ -65,6 +66,36 @@ export const StudioPage: React.FC = () => {
       setBrushSize(activeStroke.lineWidth);
     }
   }, [currentStrokeIndex]);
+
+  // Draw a faint, live vector guide on the student's canvas.
+  // It is generated from the same stroke data as the animated artist, not an image.
+  useEffect(() => {
+    const canvas = guideCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!showGhostOverlay) return;
+
+    ctx.save();
+    ctx.globalAlpha = ghostOpacity;
+    for (let i = 0; i <= currentStrokeIndex; i += 1) {
+      const stroke = ANIMATED_DEMO_STROKES[i];
+      if (!stroke || stroke.points.length < 2) continue;
+
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.lineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let point = 1; point < stroke.points.length; point += 1) {
+        ctx.lineTo(stroke.points[point].x, stroke.points[point].y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }, [currentStrokeIndex, showGhostOverlay, ghostOpacity]);
 
   // Init blank student canvas once on mounted
   useEffect(() => {
@@ -137,37 +168,36 @@ export const StudioPage: React.FC = () => {
   };
 
   // Drawing event handlers for student canvas
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (activeTool === 'pan') return;
-    setIsDrawing(true);
 
     const canvas = studentCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    canvas.setPointerCapture(e.pointerId);
+    setIsDrawing(true);
+
     const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = (clientX - rect.left) / zoomLevel;
-    const y = (clientY - rect.top) / zoomLevel;
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawing || activeTool === 'pan') return;
+
     const canvas = studentCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    const x = (clientX - rect.left) / zoomLevel;
-    const y = (clientY - rect.top) / zoomLevel;
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -204,6 +234,10 @@ export const StudioPage: React.FC = () => {
   };
 
   const handleSaveToPortfolio = async () => {
+    if (!user) {
+      window.alert("Portfolioga saqlash uchun avval Google orqali tizimga kiring.");
+      return;
+    }
     const canvas = studentCanvasRef.current;
     if (!canvas) return;
     const dataUrl = canvas.toDataURL('image/png');
@@ -216,7 +250,7 @@ export const StudioPage: React.FC = () => {
         imageUrl: dataUrl,
         authorId: user?.uid || 'guest-artist',
         authorName: profile?.displayName || 'Anime Artist',
-        authorAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        authorAvatar: profile?.photoURL || '',
         category: 'Animated Practice',
         likesCount: 1,
         likes: [user?.uid || 'guest-artist'],
@@ -470,32 +504,28 @@ export const StudioPage: React.FC = () => {
             </div>
 
             {/* Student Canvas Element */}
-            <div className="relative rounded-3xl overflow-hidden glass-panel border border-purple-500/30 shadow-2xl min-h-[480px] flex items-center justify-center bg-[#110d29] p-2">
-              
-              {/* Optional Demo Vector Ghost Overlay */}
-              {showGhostOverlay && (
-                <div
-                  className="absolute inset-0 pointer-events-none select-none z-10 flex items-center justify-center p-2"
-                  style={{ opacity: ghostOpacity }}
-                >
-                  {/* Ghost Reference Image Overlay */}
-                  <div className="w-full h-full bg-contain bg-center bg-no-repeat" />
-                </div>
-              )}
-
+            <div className="relative w-full aspect-[800/550] min-h-[300px] overflow-hidden rounded-3xl border border-purple-500/30 bg-[#110d29] shadow-2xl">
               <canvas
                 ref={studentCanvasRef}
                 width={800}
                 height={550}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-                className="block w-full h-auto bg-[#110d29] rounded-2xl border border-purple-500/20 touch-none cursor-crosshair"
+                onPointerDown={startDrawing}
+                onPointerMove={draw}
+                onPointerUp={stopDrawing}
+                onPointerCancel={stopDrawing}
+                className="absolute inset-0 block h-full w-full touch-none cursor-crosshair rounded-2xl bg-[#110d29]"
+                aria-label="O‘quvchining rasm chizish maydoni"
               />
+              {showGhostOverlay && (
+                <canvas
+                  ref={guideCanvasRef}
+                  width={800}
+                  height={550}
+                  className="pointer-events-none absolute inset-0 h-full w-full"
+                  style={{ opacity: ghostOpacity }}
+                  aria-hidden="true"
+                />
+              )}
             </div>
 
             {/* Navigation CTA Bar */}
